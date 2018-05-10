@@ -12,10 +12,13 @@ class Piece < ApplicationRecord
   	"#{color}-#{type.downcase}.png"
 	end
 
+  def check?(is_white)
+    super
+  end
+
 #Updated move_to in a cleaner way. But same idea that you created.
   def move_to!(new_x, new_y)
     transaction do
-
       raise ArgumentError, "#{type} has not moved." unless real_move?(new_x, new_y)
       occupying_piece = game.get_piece_at_coor(new_x, new_y)
       raise ArgumentError, 'That is an invalid move. Cannot capture your own piece.' if same_color?(occupying_piece)
@@ -24,8 +27,20 @@ class Piece < ApplicationRecord
     end
   end
 
+  def move_leaves_king_in_check?(new_x, new_y)
+    result = false
+    self.transaction do
+      self.move_to!(to_x, to_y)
+      if check?(self.color)
+        result = true
+        raise ArgumentError, 'That move leaves you in check!'
+      end
+    end
+    return result
+  end
 
-  def same_color? occupying_piece
+
+  def same_color?(occupying_piece)
     occupying_piece.present? && occupying_piece.color == color
   end
 
