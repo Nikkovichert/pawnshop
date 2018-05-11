@@ -12,8 +12,8 @@ class Piece < ApplicationRecord
   	"#{color}-#{type.downcase}.png"
 	end
 
-  def check?(is_white)
-    game.check?(is_white)
+  def check?(is_white_piece)
+    game.check?(is_white_piece)
   end
 
 #Updated move_to in a cleaner way. But same idea that you created.
@@ -27,15 +27,15 @@ class Piece < ApplicationRecord
     end
   end
 
-  def move_leaves_king_in_check?(is_white, new_x, new_y)
+  def move_leaves_king_in_check?(new_x, new_y)
     original_x_position = x_position
     x_position = new_x
     original_y_position = y_position
     y_position = new_y
-    moved_into_check? = check?(is_white)
+    moved_into_check = check?(is_white)
     x_position = original_x_position
     y_position = original_y_position
-    return moved_into_check?
+    return moved_into_check
   end
 
 
