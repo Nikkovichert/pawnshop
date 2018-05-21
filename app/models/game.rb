@@ -3,6 +3,7 @@ class Game < ApplicationRecord
   belongs_to :black_player, class_name: 'User', optional: true
 
   has_many :pieces, dependent: :destroy
+  has_one :pawn_vulnerable_to_en_passant_piece, class_name: 'Piece'
 
   scope :available, -> { where('white_player_id IS NULL OR black_player_id IS NULL') }
   scope :ongoing, -> { where.not('white_player_id IS NULL OR black_player_id IS NULL') }

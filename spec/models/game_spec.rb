@@ -36,7 +36,7 @@ RSpec.describe Game, type: :model do
     board.pieces << king
 
     expect(board.in_check?('WHITE')).to eq true
-    expect(board.send(:capture_opponent_causing_check?, 'WHITE')).to eq true
+    expect(board.capture_opponent_causing_check?('WHITE')).to eq true
   end
 end
 

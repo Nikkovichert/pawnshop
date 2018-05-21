@@ -10,6 +10,10 @@ class Piece < ApplicationRecord
     "#{color}-#{type.downcase}.png"
   end
 
+  def is_black
+    !is_white
+  end
+
   # Updated move_to in a cleaner way. But same idea that you created.
   def move_to!(new_x, new_y)
     transaction do
@@ -17,6 +21,12 @@ class Piece < ApplicationRecord
       occupying_piece = game.get_piece_at_coor(new_x, new_y)
       raise ArgumentError, 'That is an invalid move. Cannot capture your own piece.' if same_color?(occupying_piece)
       capture_piece!(occupying_piece) if square_occupied?(new_x, new_y)
+      capture_piece!(game.vulnerable_to_en_passant) if respond_to?(:can_attack_en_passant?) && can_attack_en_passant?(new_x, new_y)
+      if respond_to?(:vulnerable_to_en_passant?) && vulnerable_to_en_passant?(new_x, new_y)
+        game.update(pawn_vulnerable_to_en_passant_piece: self)
+      else
+        game.update(pawn_vulnerable_to_en_passant_piece: nil)
+      end
       update(x_position: new_x, y_position: new_y)
     end
   end
@@ -24,7 +34,6 @@ class Piece < ApplicationRecord
   def same_color?(occupying_piece)
     occupying_piece.present? && occupying_piece.color == color
   end
-
 
   def square_occupied?(new_x, new_y)
     piece = game.pieces.find_by(x_position: new_x, y_position: new_y)
@@ -37,6 +46,8 @@ class Piece < ApplicationRecord
   end
 
   def capture_piece!(captured_piece)
+    puts "captured_piece!"
+    puts captured_piece
     captured_piece.update(x_position: nil, y_position: nil)
   end
 
@@ -50,31 +61,56 @@ class Piece < ApplicationRecord
   def count_moves
     game.update(move_number: game.move_number + 1)
     update(game_move_number: game.move_number, piece_move_number: piece_move_number + 1)
-    update(has_moved: true)
+    update(piece_moved: true)
   end
 
   def get_piece_at_coor(x_pos, y_pos)
     game.get_piece_at_coor(x_pos, y_pos)
   end
 
+  # CHECKMATE method
+  # determine if a state of checkmate has occurred
+  def checkmate?(color)
+    checked_king = pieces.find_by(type: 'King', color: color)
 
-  # start stubs to make Rspec work
-  def valid_move?(new_x, new_y)
+    # make sure color is in check and get @piece_causing_check
+    return false unless check?(color)
+
+    # see if another piece can capture checking piece
+    return false if @piece_causing_check.can_be_captured?
+
+    # see if king can get himself out of check
+    return false if checked_king.can_move_out_of_check?
+
     true
   end
 
-  def horizontal_move?(new_x, new_y)
-    true
+  # determines if color is in check
+  def check?(color)
+    king = pieces.find_by(type: 'King', color: color)
+    opponents = pieces_remaining(!color)
+    opponents.each do |piece|
+      if piece.valid_move?(king.x_position, king.y_position)
+        @piece_causing_check = piece
+        return true
+      end
+    end
+    false
   end
 
-  def vertical_move?(new_x, new_y)
-    true
+  # method to determine if a piece can be captured.
+  # called to determine checkmate
+  def can_be_captured?
+    opponents = game.pieces_remaining(!color)
+    opponents.each do |opponent|
+      # for each opponent, see if the checking piece can be captured
+      return true if opponent.valid_move?(x_position, y_position)
+    end
+    false
   end
 
-  def diagonal_move?(new_x, new_y)
-    true
-  end
-# end stubs to make Rspec work
+
+  # END CHECKMATE method
 
   def is_vertically_obstructed?(_new_x, new_y)
     x1 = x_position
@@ -122,10 +158,10 @@ class Piece < ApplicationRecord
   end
 
 
-  def is_diagonally_obstructed?(new_x, new_y)
+  def is_diagonally_obstructed(new_x, new_y)
     x1 = x_position
     y1 = y_position
-
+    raise 'Invalid move' if (x1 - new_x).abs != (y1 - new_y).abs
 
     if (x1 < new_x) && (y1 < new_y)
 
@@ -203,5 +239,3 @@ class Piece < ApplicationRecord
     end
   end
 end
-
-    

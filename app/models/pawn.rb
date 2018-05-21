@@ -11,21 +11,28 @@ class Pawn < Piece
     if move_two_squares_ok?(new_x.to_i, new_y.to_i) && !square_occupied?(new_x.to_i, new_y.to_i)
       update(turn_pawn_moved_twice: game.move_number + 1) if moving_two_squares?(new_x.to_i, new_y.to_i)
       return true
-  end
-
-end
-
-    def can_attack_square?(new_x, new_y)
-      x_difference = (new_x.to_i - x_position.to_i).abs
-      y_difference = (new_y.to_i - y_position.to_i).abs
-      return true if x_difference == 1 && y_difference == 1
-      false
     end
 
+  end
 
+  def can_attack_square?(new_x, new_y)
+    x_difference = (new_x.to_i - x_position.to_i).abs
+    y_difference = (new_y.to_i - y_position.to_i).abs
+    return true if x_difference == 1 && y_difference == 1
+    false
+  end
 
-    private
+  def vulnerable_to_en_passant?(new_x, new_y)
+    piece_moved == false && (new_x.to_i - x_position.to_i).abs == 2
+  end
 
+  private
+
+  def can_attack_en_passant?(new_x, new_y)
+    puts "can_attack_en_passant? X=#{new_x} Y=#{new_y}"
+    return false unless game.vulnerable_to_en_passant
+    game.vulnerable_to_en_passant.x_position == new_x.to_i && (game.vulnerable_to_en_passant.y_position - new_y.to_i).abs == 1
+  end
 
   def can_attack_square?(new_x, new_y)
     x_difference = (new_x.to_i - x_position.to_i).abs
