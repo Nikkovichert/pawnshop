@@ -26,7 +26,7 @@ class Pawn < Piece
     piece_moved == false && (new_x.to_i - x_position.to_i).abs == 2
   end
 
-  private
+  protected
 
   def can_attack_en_passant?(new_x, new_y)
     puts "can_attack_en_passant? X=#{new_x} Y=#{new_y}"
