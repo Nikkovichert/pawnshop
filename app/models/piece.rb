@@ -22,7 +22,7 @@ class Piece < ApplicationRecord
       raise ArgumentError, 'That is an invalid move. Cannot capture your own piece.' if same_color?(occupying_piece)
       capture_piece!(occupying_piece) if square_occupied?(new_x, new_y)
       capture_piece!(game.vulnerable_to_en_passant) if respond_to?(:can_attack_en_passant?) && can_attack_en_passant?(new_x, new_y)
-      if respond_to?(:vulnerable_to_en_passant?) && vulnerable_to_en_passant?(new_x, new_y)
+      if respond_to?(:vulnerable_to_en_passant?) && vulnerable_to_en_passant?
         game.update(pawn_vulnerable_to_en_passant_piece: self)
       else
         game.update(pawn_vulnerable_to_en_passant_piece: nil)
